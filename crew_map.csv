@@ -1,0 +1,5 @@
+module,crew_id,role,contact
+Antenna,REPLACE_antenna_crew_id,Antenna specialist,REPLACE_antenna_contact
+Notice-Bus,REPLACE_notice_bus_crew_id,Notice-Bus specialist,REPLACE_notice_bus_contact
+Lab-Power,REPLACE_lab_power_crew_id,Lab-Power specialist,REPLACE_lab_power_contact
+Life-Support,REPLACE_life_support_crew_id,Life-Support specialist,REPLACE_life_support_contact

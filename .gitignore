@@ -1,4 +1,6 @@
 outputs/
 *.csv
+!crew_map.csv
 __pycache__/
 .ipynb_checkpoints/
+.env
