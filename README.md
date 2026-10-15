@@ -8,8 +8,8 @@ In the notebook, run `pip install -r requirements.txt` first. That installs pand
 
 1. Upload a valid starter CSV and leave it in place.
 2. `pip install -r requirements.txt`
-3. `python run_baseline.py --data-dir /kaggle/input/<your-dataset>`
-4. If it prints `TRANSMISSION VALID`, you may upload `outputs/submission_baseline.csv`. This file is the permanent fallback.
+3. `python run_baseline.py --data-dir /kaggle/input/<your-dataset>` writes `outputs/submission_node.csv`. It does not overwrite `outputs/submission_baseline.csv`.
+4. Upload `outputs/submission_node.csv` only if the script prints `RECOMMEND` and `TRANSMISSION VALID`. If it prints `RETAIN`, upload the old baseline file.
 5. `python run_lightgbm.py --data-dir /kaggle/input/<your-dataset>`
 6. Upload `outputs/submission_lightgbm.csv` only when the script prints `KEEP` and `TRANSMISSION VALID`. Otherwise keep the baseline file.
 7. Optional feature check, still logistic regression: `python run_experiments.py --data-dir /kaggle/input/<your-dataset>`
@@ -30,8 +30,8 @@ Re-running a script does not overwrite a file that already passed the format che
 | `modeling.py` | feature columns and train labels | logistic, LightGBM, or tree probabilities |
 | `threshold.py` | labels and probabilities | a hard threshold and F1, precision, recall, positive count |
 | `submission.py` | test ids in file order and probabilities | `log_id,is_true_fault` |
-| `run_baseline.py` | the three CSVs | `outputs/submission_baseline.csv`, `outputs/metrics_baseline.json` |
+| `run_baseline.py` | the three CSVs and, for the comparison, the checked baseline metrics | `outputs/submission_node.csv`, `outputs/metrics_node.json` |
 | `run_lightgbm.py` | the three CSVs and a checked baseline | `outputs/submission_lightgbm.csv`, `outputs/metrics_lightgbm.json` |
 | `run_experiments.py` | the three CSVs | `outputs/metrics_experiments.json`, and `outputs/submission_candidate.csv` only if the feature change earns the gain |
 
-`run_lightgbm.py` uses the same baseline columns as `run_baseline.py`. It does not read a test label, and it does not write the baseline or candidate paths.
+`run_baseline.py` with `INCLUDE_NODE` does not write `outputs/submission_baseline.csv`. Do not rerun `run_lightgbm.py` for this check. That script reads the same column list and would also see `node`.

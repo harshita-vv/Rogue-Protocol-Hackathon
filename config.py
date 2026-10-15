@@ -19,8 +19,8 @@ RAW_COLUMNS = [
 ]
 EXPECTED_ROWS = {"train": 6000, "val": 1000, "test": 3000}
 
-# Node rates shifted between train and val. Leave off unless a Kaggle run shows a real gain.
-INCLUDE_NODE = False
+# Controlled check: same logistic baseline, with node added. Scored on Kaggle.
+INCLUDE_NODE = True
 
 C_GRID = (0.3, 1.0, 3.0)
 BASE_C = 1.0
@@ -65,6 +65,8 @@ SEVERE_EVENTS = frozenset(
 OUTPUT_DIR = Path("outputs")
 BASELINE_SUBMISSION = OUTPUT_DIR / "submission_baseline.csv"
 BASELINE_METRICS = OUTPUT_DIR / "metrics_baseline.json"
+NODE_SUBMISSION = OUTPUT_DIR / "submission_node.csv"
+NODE_METRICS = OUTPUT_DIR / "metrics_node.json"
 CANDIDATE_SUBMISSION = OUTPUT_DIR / "submission_candidate.csv"
 EXPERIMENT_METRICS = OUTPUT_DIR / "metrics_experiments.json"
 LGB_SUBMISSION = OUTPUT_DIR / "submission_lightgbm.csv"
