@@ -2,9 +2,11 @@
 
 Input: feature frames from features.build_features and a train label vector.
 Output: positive-class probabilities. Logistic regression stays sparse.
+LightGBM is optional and is constructed only when the import succeeds.
 Depends on: config.py
 """
 
+import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.impute import SimpleImputer
@@ -79,3 +81,56 @@ def make_hgb(bundle):
 
 def positive_proba(model, features):
     return model.predict_proba(features)[:, 1]
+
+
+def lightgbm_available():
+    """Return (True, version) or (False, reason). Never installs anything."""
+    try:
+        import lightgbm
+    except Exception as exc:
+        return False, f"{exc.__class__.__name__}: {exc}"
+    return True, getattr(lightgbm, "__version__", "unknown")
+
+
+def _category_map(frame, categorical):
+    mapping = {}
+    for column in categorical:
+        values = frame[column].astype("string").fillna("MISSING")
+        mapping[column] = pd.Index(values.unique())
+    return mapping
+
+
+def _apply_categories(frame, mapping):
+    encoded = frame.copy()
+    for column, categories in mapping.items():
+        values = encoded[column].astype("string").fillna("MISSING")
+        encoded[column] = pd.Categorical(values, categories=categories)
+    return encoded
+
+
+class _LightGBMModel:
+    """Categories are taken from the train rows passed to fit_lightgbm."""
+
+    def __init__(self, model, categories):
+        self.model = model
+        self.categories = categories
+
+    def predict_proba(self, features):
+        return self.model.predict_proba(_apply_categories(features, self.categories))
+
+
+def fit_lightgbm(x_train, y_train, bundle):
+    available, detail = lightgbm_available()
+    if not available:
+        raise RuntimeError(detail)
+    import lightgbm as lgb
+
+    categorical = config.categorical_columns(bundle)
+    categories = _category_map(x_train, categorical)
+    model = lgb.LGBMClassifier(**config.LGB_PARAMS)
+    model.fit(
+        _apply_categories(x_train, categories),
+        y_train,
+        categorical_feature=categorical,
+    )
+    return _LightGBMModel(model, categories)

@@ -5,10 +5,26 @@ Output: CSV with exactly log_id,is_true_fault and integer 0/1 verdicts.
 Depends on: pandas, numpy.
 """
 
+import json
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+
+def checked_record(metrics_path, submission_path):
+    """Return a metrics dict only when that submission already passed the format check."""
+    metrics_path = Path(metrics_path)
+    submission_path = Path(submission_path)
+    if not metrics_path.is_file() or not submission_path.is_file():
+        return None
+    try:
+        record = json.loads(metrics_path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    if record.get("format_ok") is True:
+        return record
+    return None
 
 
 def write_submission(log_ids, proba, threshold, path):

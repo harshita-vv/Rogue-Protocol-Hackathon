@@ -4,8 +4,7 @@ Input: train.csv, val.csv, test.csv.
 Output: outputs/submission_baseline.csv and outputs/metrics_baseline.json.
 Depends on: config, data_io, features, modeling, threshold, submission.
 
-Does not write submission_candidate.csv. Upload this file only after TRANSMISSION VALID,
-and only in place of the starter upload.
+Does not write the LightGBM or candidate files. A format-checked baseline file is left in place.
 """
 
 import argparse
@@ -26,6 +25,12 @@ def parse_args():
 
 
 def main(data_dir=None):
+    existing = submission.checked_record(config.BASELINE_METRICS, config.BASELINE_SUBMISSION)
+    if existing:
+        print("Keeping the checked baseline. outputs/submission_baseline.csv was not overwritten.")
+        print(existing.get("format_report", ""))
+        return existing
+
     train, val, test = data_io.load_splits(data_dir)
     test_ids = test[config.ID_COL].copy()
     stats = features.fit_module_stats(train)
@@ -39,7 +44,7 @@ def main(data_dir=None):
         val[config.LABEL].to_numpy(),
         modeling.positive_proba(model, x_val),
     )
-    path = config.OUTPUT_DIR / "submission_baseline.csv"
+    path = config.BASELINE_SUBMISSION
     submission.write_submission(
         test_ids,
         modeling.positive_proba(model, x_test),
@@ -57,7 +62,7 @@ def main(data_dir=None):
         "format_report": report,
     }
     config.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    (config.OUTPUT_DIR / "metrics_baseline.json").write_text(json.dumps(record, indent=2))
+    config.BASELINE_METRICS.write_text(json.dumps(record, indent=2))
     print(
         f"baseline val F1={chosen['f1']:.3f} threshold={chosen['threshold']:.2f} "
         f"P={chosen['precision']:.3f} R={chosen['recall']:.3f} "

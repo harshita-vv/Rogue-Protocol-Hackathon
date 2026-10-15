@@ -63,6 +63,27 @@ SEVERE_EVENTS = frozenset(
 )
 
 OUTPUT_DIR = Path("outputs")
+BASELINE_SUBMISSION = OUTPUT_DIR / "submission_baseline.csv"
+BASELINE_METRICS = OUTPUT_DIR / "metrics_baseline.json"
+CANDIDATE_SUBMISSION = OUTPUT_DIR / "submission_candidate.csv"
+EXPERIMENT_METRICS = OUTPUT_DIR / "metrics_experiments.json"
+LGB_SUBMISSION = OUTPUT_DIR / "submission_lightgbm.csv"
+LGB_METRICS = OUTPUT_DIR / "metrics_lightgbm.json"
+
+# One fixed challenger. No search and no blend with logistic regression.
+LGB_PARAMS = {
+    "objective": "binary",
+    "n_estimators": 200,
+    "learning_rate": 0.05,
+    "num_leaves": 31,
+    "min_child_samples": 40,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "reg_lambda": 1.0,
+    "random_state": SEED,
+    "n_jobs": -1,
+    "verbosity": -1,
+}
 
 
 def numeric_columns(bundle):

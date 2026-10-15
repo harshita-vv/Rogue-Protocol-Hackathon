@@ -6,7 +6,8 @@ Output: outputs/metrics_experiments.json.
         by more than MIN_GAIN and the OOF check passes.
 Depends on: config, data_io, features, modeling, threshold, submission.
 
-Run run_baseline.py first. This script does not overwrite submission_baseline.csv.
+Run run_baseline.py first. This script does not overwrite the baseline or LightGBM files.
+A format-checked candidate file is also left in place.
 """
 
 import argparse
@@ -82,6 +83,12 @@ def _prepare(train, val, test, bundle):
 
 
 def main(data_dir=None, run_hgb=False):
+    existing = submission.checked_record(config.EXPERIMENT_METRICS, config.CANDIDATE_SUBMISSION)
+    if existing:
+        print("Keeping the checked candidate. outputs/submission_candidate.csv was not overwritten.")
+        print(existing.get("format_report", ""))
+        return existing
+
     train, val, test = data_io.load_splits(data_dir)
     y_train = train[config.LABEL].to_numpy()
     y_val = val[config.LABEL].to_numpy()
@@ -167,7 +174,7 @@ def main(data_dir=None, run_hgb=False):
     gain = winner["f1"] - baseline["f1"]
     config.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     if gain > config.MIN_GAIN:
-        path = config.OUTPUT_DIR / "submission_candidate.csv"
+        path = config.CANDIDATE_SUBMISSION
         submission.write_submission(test_ids, winner["test_proba"], winner["threshold"], path)
         ok, report = submission.check_submission(path, test_ids)
         record["submission"] = str(path)
@@ -175,11 +182,11 @@ def main(data_dir=None, run_hgb=False):
         record["format_report"] = report
         print(report)
         print(
-            "Candidate does not replace outputs/submission_baseline.csv. "
+            "Candidate does not replace the baseline or LightGBM files. "
             "Upload outputs/submission_candidate.csv only if the line above is TRANSMISSION VALID."
         )
         if not ok:
-            (config.OUTPUT_DIR / "metrics_experiments.json").write_text(json.dumps(record, indent=2))
+            config.EXPERIMENT_METRICS.write_text(json.dumps(record, indent=2))
             raise SystemExit(1)
     else:
         record["submission"] = None
@@ -188,7 +195,7 @@ def main(data_dir=None, run_hgb=False):
             "Candidate was not written."
         )
 
-    (config.OUTPUT_DIR / "metrics_experiments.json").write_text(json.dumps(record, indent=2))
+    config.EXPERIMENT_METRICS.write_text(json.dumps(record, indent=2))
     return record
 
 
